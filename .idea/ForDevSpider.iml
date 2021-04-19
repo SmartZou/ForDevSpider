@@ -2,7 +2,6 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <excludeFolder url="file://$MODULE_DIR$/Csdn/Csdn_redis_slaver/Csdn_redis_slaver" />
       <excludeFolder url="file://$MODULE_DIR$/Csdn_redis_master/Csdn_redis_master" />
       <excludeFolder url="file://$MODULE_DIR$/Csdn_redis_slaver/Csdn_redis_slaver" />
     </content>
