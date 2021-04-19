@@ -24,43 +24,11 @@ class CsdnRedisSlaverPipeline:
         # self.es_index_type = "csdn_type"
         self.es = Elasticsearch(
             ELASTICSEARCH_HOST,
-            sniff_on_start=True,  # 连接前测试
+            sniff_on_start=False,  # 连接前测试
             sniff_on_connection_fail=True,  # 节点无响应刷新节点
             sniff_timeout=60,  # 设置超时时间
             # 除指定Es地址外，其他值均可以使用默认值
         )
-        self._index_mappings = {
-            "mappings": {
-                self.es_index_type: {
-                    "properties": {
-                        "source":{
-                            "type": "text",
-                            "index": True,
-                        },
-                        "title": {
-                            "type": "text",
-                            "index": True,
-                        },
-                        "author": {
-                            "type": "text",
-                            "index": True,
-                        },
-                        "updated": {
-                            "type": "text",
-                            "index": True,
-                        },
-                        "tags": {
-                            "type": "text",
-                            "index": True,
-                        },
-                        "content": {
-                            "type": "text",
-                            "index": True,
-                        },
-                    }
-                }
-            }
-        }
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -87,9 +55,9 @@ class CsdnRedisSlaverPipeline:
         logger.info("opened spider %s redis spider Idle, Continuous idle limit： %d", spider.name, self.idle_number)
 
     def process_item(self, item, spider):
-        if self.es.indices.exists(index=self.es_index_name) is not True:
-            res = self.es.indices.create(index=self.es_index_name, body=self._index_mappings)
-            print('创建index结果:', res)
+        if es.indices.exists(index=es_index_name) is not True:
+            res = es.indices.create(index=es_index_name)
+            print(res)
 
     def spider_closed(self, spider):  # 获取当前已经连续触发的次数
 
