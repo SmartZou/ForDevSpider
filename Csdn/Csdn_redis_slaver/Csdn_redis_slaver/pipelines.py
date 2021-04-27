@@ -20,7 +20,7 @@ class CsdnRedisSlaverPipeline:
         self.idle_list = []
         self.idle_count = 0
         self.cnt = 0
-        self.es_index_name = "csdn_index"
+        self.es_index_name = "ForDev"
         # self.es_index_type = "csdn_type"
         self.es = Elasticsearch(
             ELASTICSEARCH_HOST,
@@ -80,5 +80,6 @@ class CsdnRedisSlaverPipeline:
                                                                                 self.idle_list[0], self.idle_list[0]))
             # 执行关闭爬虫操作
             content = "Slaver已关闭,共抓取数据:{0}条.".format(self.cnt)
+            print(content)
             # sendmail(receivers=receivers, content=content, subject="Slaver爬虫执行完毕")
             self.crawler.engine.close_spider(spider, 'closespider_pagecount')

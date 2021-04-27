@@ -9,9 +9,11 @@ import scrapy
 class CsdnRedisSlaverItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()
+
     source = scrapy.Field()
     title = scrapy.Field()
     author = scrapy.Field()
     updated = scrapy.Field()
     tags = scrapy.Field()
     content = scrapy.Field()
+    webSource = scrapy.Field()

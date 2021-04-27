@@ -1,3 +1,5 @@
+import re
+
 import scrapy
 from Csdn_redis_master.items import CsdnRedisMasterItem
 
@@ -5,14 +7,25 @@ from Csdn_redis_master.items import CsdnRedisMasterItem
 class CsdnUrlSpider(scrapy.Spider):
     name = "csdn_master"
 
-    # allowed_domains = ["blog.csdn.net"]  # 限定域名，只爬取该域名下的网页
+    allowed_domains = ["blog.csdn.net"]  # 限定域名，只爬取该域名下的网页
+
     # start_urls = [  # 开始爬取的链接
     #     "https://blog.csdn.net/u011718690/article/details/114558541"
     # ]
 
     def parse(self, response, **kwargs):
-        recommend_urls = response.xpath(
-            "//div[@class='content-box']/div/div[@class='title-box']/a/@href").extract()
+        # // *[ @ id = "mainBox"] / main / div[8] / div[2] / div / div[2] / a
+        all_urls = response.xpath(
+            "//a/@href").extract()
+        recommend_urls = []
+        # for i in all_urls:
+        #     if i[:21] == "https://blog.csdn.net":
+        #         recommend_urls.append(i)
+
+        for i in all_urls:
+            tmp = str(i[8:]).split('/')
+            if 'article' in tmp and 'details' in tmp and 'blog.csdn.net' in tmp:
+                recommend_urls.append(i)
         for recommend_url in recommend_urls:
             item = CsdnRedisMasterItem()
             item['url'] = recommend_url
