@@ -5,8 +5,9 @@
 
 
 # useful for handling different item types with a single interface
-from itemadapter import ItemAdapter
-import logging
+import csv
+import time
+import pymysql
 from scrapy import signals
 from scrapy.exceptions import NotConfigured
 from elasticsearch import Elasticsearch
@@ -15,6 +16,15 @@ from Csdn_redis_slaver.settings import ELASTICSEARCH_HOST
 
 class CsdnRedisSlaverPipeline:
     def __init__(self, idle_number, crawler):
+        self.connect = pymysql.connect(
+            host='127.0.0.1',  # 数据库地址
+            port=3308,  # 数据库端口
+            db='Spider',  # 数据库名
+            user='root',  # 数据库用户名
+            passwd='52873083',  # 数据库密码
+            charset='utf8',  # 编码方式
+            use_unicode=True)
+        self.cursor = self.connect.cursor()
         self.crawler = crawler
         self.idle_number = idle_number
         self.idle_list = []
@@ -29,6 +39,30 @@ class CsdnRedisSlaverPipeline:
             sniff_timeout=60,  # 设置超时时间
             # 除指定Es地址外，其他值均可以使用默认值
         )
+        self.headers = ['webSource', 'source', 'title', 'author', 'tags', 'created', 'updated', 'content']
+        self.csvO = open('csdn_data.csv', 'w')
+        self.csvW = csv.DictWriter(self.csvO, self.headers)
+        self.csvW.writeheader()
+
+    def process_item(self, item, spider):
+        # 通过cursor执行增删查改
+        # 保存到mysql
+        self.cursor.execute("insert ignore into csdn values (%s, %s, %s, %s, %s, %s, %s, %s)",
+                            (item['webSource'], item['source'], item['title'], item['author'], item['tags'],
+                             time.strftime("%Y%m%d", time.localtime(time.time())), item['updated'], "content"))
+        # line = [item['webSource'], item['source'], item['title'], item['author'], item['tags'],
+        #         time.strftime("%Y%m%d", time.localtime(time.time())), item['updated'], "content"]
+        line = {
+            "webSource": item['webSource'],
+            "source": item['source'],
+            "title": item['title'],
+        }
+        self.csvW.writerow(line)
+        self.connect.commit()
+        return item
+        # if es.indices.exists(index=es_index_name) is not True:
+        #     res = es.indices.create(index=es_index_name)
+        #     print(res)
 
     @classmethod
     def from_crawler(cls, crawler):
@@ -52,17 +86,14 @@ class CsdnRedisSlaverPipeline:
         return ext
 
     def spider_opened(self, spider):
-        logger.info("opened spider %s redis spider Idle, Continuous idle limit： %d", spider.name, self.idle_number)
-
-    def process_item(self, item, spider):
-        if es.indices.exists(index=es_index_name) is not True:
-            res = es.indices.create(index=es_index_name)
-            print(res)
+        print("opened spider")
+        # logger.info("opened spider %s redis spider Idle, Continuous idle limit： %d", spider.name, self.idle_number)
 
     def spider_closed(self, spider):  # 获取当前已经连续触发的次数
-
-        logger.info("closed spider %s, idle count %d , Continuous idle count %d",
-                    spider.name, self.idle_count, len(self.idle_list))
+        self.csvO.close()
+        print("closed spider")
+        # logger.info("closed spider %s, idle count %d , Continuous idle count %d",
+        #             spider.name, self.idle_count, len(self.idle_list))
 
     def spider_idle(self, spider):
         self.idle_count += 1  # 空闲计数
