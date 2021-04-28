@@ -4,6 +4,7 @@
     <content url="file://$MODULE_DIR$">
       <sourceFolder url="file://$MODULE_DIR$/Csdn/Csdn_redis_master/Csdn_redis_master" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Csdn/Csdn_redis_slaver/Csdn_redis_slaver" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/Gitee/Gitee_redis_master/Gitee_redis_master/spiders" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/Csdn_redis_master/Csdn_redis_master" />
       <excludeFolder url="file://$MODULE_DIR$/Csdn_redis_slaver/Csdn_redis_slaver" />
     </content>
