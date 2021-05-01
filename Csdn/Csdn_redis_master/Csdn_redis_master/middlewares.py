@@ -23,3 +23,4 @@ class CsdnRedisMasterDownloaderMiddleware:
         ua = choice(UA_list)
         if ua:
             request.headers.setdefault('User-Agent', ua)
+

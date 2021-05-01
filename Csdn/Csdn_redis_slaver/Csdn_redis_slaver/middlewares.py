@@ -5,6 +5,11 @@
 
 from scrapy import signals
 
+from Csdn_redis_slaver.settings import UA_list, proxy_api
+from random import choice, randint
+from twisted.internet.error import TimeoutError, ConnectionRefusedError
+import requests
+
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
 
@@ -61,6 +66,14 @@ class CsdnRedisSlaverDownloaderMiddleware:
     # scrapy acts as if the downloader middleware does not modify the
     # passed objects.
 
+    def __init__(self):
+        self.pre_proxy = ''
+        self.proxy_ip = self.get_proxy()
+
+    def get_proxy(self):
+        s = 'http://' + requests.get(proxy_api).text
+        return s
+
     @classmethod
     def from_crawler(cls, crawler):
         # This method is used by Scrapy to create your spiders.
@@ -69,35 +82,45 @@ class CsdnRedisSlaverDownloaderMiddleware:
         return s
 
     def process_request(self, request, spider):
-        # Called for each request that goes through the downloader
-        # middleware.
-
-        # Must either:
-        # - return None: continue processing this request
-        # - or return a Response object
-        # - or return a Request object
-        # - or raise IgnoreRequest: process_exception() methods of
-        #   installed downloader middleware will be called
+        ua = choice(UA_list)
+        if ua:
+            request.headers.setdefault('User-Agent', ua)
+        request.meta['proxy'] = self.proxy_ip
         return None
 
     def process_response(self, request, response, spider):
-        # Called with the response returned from the downloader.
-
-        # Must either;
-        # - return a Response object
-        # - return a Request object
-        # - or raise IgnoreRequest
+        if response.status != 200:
+            return request
         return response
 
     def process_exception(self, request, exception, spider):
-        # Called when a download handler or a process_request()
-        # (from other downloader middleware) raises an exception.
+        print(type(exception), exception)
+        # 连接失败异常
+        if isinstance(exception, ConnectionRefusedError):
+            # 失效后，把失效ip做记录pre
+            self.pre_proxy = request.meta['proxy']
+            # 判断当前ip是否失效
+            if self.proxy_ip == self.pre_proxy:
+                # 失效则获取新的ip
+                self.proxy_ip = self.get_proxy()
+                print(self.pre_proxy, ' change ', self.proxy_ip)
+            # 如果当前ip不是失效ip(已经请求过新的)
+            request.meta['proxy'] = self.proxy_ip
 
-        # Must either:
-        # - return None: continue processing this exception
-        # - return a Response object: stops process_exception() chain
-        # - return a Request object: stops process_exception() chain
-        pass
+        # 超时异常，处理时采用1/10的概率进行更换ip
+        if isinstance(exception, TimeoutError):
+            opt = randint(0, 8)
+            if opt == 1:
+                # 失效后，把失效ip做记录pre
+                self.pre_proxy = request.meta['proxy']
+                # 判断当前ip是否失效
+                if self.proxy_ip == self.pre_proxy:
+                    # 失效则获取新的ip
+                    self.proxy_ip = self.get_proxy()
+                    print(self.pre_proxy, ' change ', self.proxy_ip)
+                # 如果当前ip不是失效ip(已经请求过新的)
+                request.meta['proxy'] = self.proxy_ip
+        return request
 
     def spider_opened(self, spider):
         spider.logger.info('Spider opened: %s' % spider.name)

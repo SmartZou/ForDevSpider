@@ -16,6 +16,7 @@ class CsdnSlaverSpider(RedisSpider):
         self.r = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
 
     def parse(self, response):
+        cot = ""
         item = CsdnRedisSlaverItem()
         # 获取文章来源
         item['source'] = response.url
@@ -33,14 +34,17 @@ class CsdnSlaverSpider(RedisSpider):
             "//a[@class='tag-link']/text()").extract_first()
         # 获取内容
         contTmp = response.xpath(
-            "//div[@class='htmledit_views']").extract_first()
+            "//div[@id='content_views']").extract_first()
+
         # print(contTmp)contTmp
         # 解析内容
-        # bs = BeautifulSoup(contTmp, 'html5lib')
-        # for a in bs.stripped_strings:
-        #     print(repr(a))
+        bs = BeautifulSoup(contTmp, 'html5lib')
+
+        for a in bs.stripped_strings:
+            cot += repr(a)
+        # print(cot)
         # 解析内容
-        # item['content'] = contTmp
+        item['content'] = cot
         # 内容来源网站
         item['webSource'] = "CSDN"
         yield item

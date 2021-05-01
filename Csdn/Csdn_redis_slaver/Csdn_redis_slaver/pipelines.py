@@ -39,25 +39,30 @@ class CsdnRedisSlaverPipeline:
             sniff_timeout=60,  # 设置超时时间
             # 除指定Es地址外，其他值均可以使用默认值
         )
-        self.headers = ['webSource', 'source', 'title', 'author', 'tags', 'created', 'updated', 'content']
-        self.csvO = open('csdn_data.csv', 'w')
-        self.csvW = csv.DictWriter(self.csvO, self.headers)
-        self.csvW.writeheader()
+        # self.headers = ['webSource', 'source', 'title', 'author', 'tags', 'created', 'updated', 'content']
+        # self.csvO = open('csdn_data.csv', 'w',  newline='')
+        # self.csvW = csv.DictWriter(self.csvO, self.headers)
+        # self.csvW.writeheader()
 
     def process_item(self, item, spider):
         # 通过cursor执行增删查改
         # 保存到mysql
         self.cursor.execute("insert ignore into csdn values (%s, %s, %s, %s, %s, %s, %s, %s)",
                             (item['webSource'], item['source'], item['title'], item['author'], item['tags'],
-                             time.strftime("%Y%m%d", time.localtime(time.time())), item['updated'], "content"))
+                             time.strftime("%Y%m%d", time.localtime(time.time())), item['updated'], item['content']))
         # line = [item['webSource'], item['source'], item['title'], item['author'], item['tags'],
         #         time.strftime("%Y%m%d", time.localtime(time.time())), item['updated'], "content"]
-        line = {
-            "webSource": item['webSource'],
-            "source": item['source'],
-            "title": item['title'],
-        }
-        self.csvW.writerow(line)
+        # line = {
+        #     "webSource": item['webSource'],
+        #     "source": item['source'],
+        #     "title": item['title'],
+        #     "author": item['author'],
+        #     'tags': item['tags'],
+        #     # 'time': time.strftime("%Y%m%d", time.localtime(time.time())),
+        #     'updated': item['updated'],
+        #     'content': item['content'],
+        # }
+        # self.csvW.writerow(line)
         self.connect.commit()
         return item
         # if es.indices.exists(index=es_index_name) is not True:
